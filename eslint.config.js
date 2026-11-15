@@ -9,4 +9,14 @@ export default tseslint.config(
     // CLAUDE.md section 12: no `any` types, ever.
     rules: { '@typescript-eslint/no-explicit-any': 'error' },
   },
+  {
+    // ADR-0002: only packages/core may touch the database driver.
+    files: ['apps/**', 'miniapps/**', 'packages/ui/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: [{ name: 'mongoose', message: 'Use tenantModel from @dukaan/core.' }] },
+      ],
+    },
+  },
 );

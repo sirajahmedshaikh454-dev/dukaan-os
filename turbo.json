@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["MONGOMS_*"],
   "tasks": {
     "typecheck": {},
     "test": {}
