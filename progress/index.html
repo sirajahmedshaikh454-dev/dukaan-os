@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dukaan OS — Progress</title>
+    <style>
+      :root {
+        --paper: #f7f1e3;
+        --card: #fffaf0;
+        --ink: #2a2118;
+        --muted: #6f6253;
+        --line: #e2d6bd;
+        --green: #1f5c44;
+        --saffron: #d98a1c;
+        --red: #a63a2b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          16px/1.5 Georgia,
+          'Times New Roman',
+          serif;
+      }
+      main {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+      }
+      h1 {
+        font-size: 2rem;
+        margin: 0;
+        color: var(--green);
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin: 40px 0 12px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid var(--line);
+      }
+      .sub,
+      .small {
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        font-size: 0.875rem;
+      }
+      .bar {
+        height: 14px;
+        background: var(--line);
+        border-radius: 7px;
+        overflow: hidden;
+        margin: 16px 0 6px;
+      }
+      .bar > div {
+        height: 100%;
+        background: var(--green);
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .card b {
+        display: block;
+      }
+      .pill {
+        display: inline-block;
+        font:
+          600 0.75rem system-ui,
+          sans-serif;
+        padding: 2px 8px;
+        border-radius: 999px;
+        margin-top: 8px;
+        border: 1px solid currentColor;
+      }
+      .s-done {
+        color: var(--green);
+      }
+      .s-building,
+      .s-testing {
+        color: var(--saffron);
+      }
+      .s-not-started {
+        color: var(--muted);
+      }
+      ol.phases {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      ol.phases li {
+        padding: 10px 0 10px 28px;
+        border-left: 3px solid var(--line);
+        margin-left: 8px;
+        position: relative;
+      }
+      ol.phases li::before {
+        content: '';
+        position: absolute;
+        left: -9px;
+        top: 16px;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--paper);
+        border: 3px solid var(--line);
+      }
+      ol.phases li.s-done::before {
+        background: var(--green);
+        border-color: var(--green);
+      }
+      ol.phases li.s-building::before {
+        border-color: var(--saffron);
+      }
+      ol.phases li {
+        color: var(--ink);
+      }
+      .log {
+        border-left: 3px solid var(--saffron);
+        padding: 4px 0 4px 14px;
+        margin-bottom: 18px;
+      }
+      .log p {
+        margin: 4px 0;
+      }
+      .blocker {
+        color: var(--red);
+      }
+      ul {
+        padding-left: 20px;
+      }
+      a {
+        color: var(--green);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Dukaan OS</h1>
+      <div class="sub">
+        The operating system for small businesses in Pakistan — progress tracker
+      </div>
+      <div class="bar" role="progressbar" aria-label="Overall progress"><div id="bar"></div></div>
+      <div class="sub" id="pct"></div>
+
+      <h2>Phases</h2>
+      <ol class="phases" id="phases"></ol>
+
+      <h2>Mini-apps</h2>
+      <div class="grid" id="apps"></div>
+
+      <h2>Session log</h2>
+      <div id="log"></div>
+
+      <h2>Decisions made</h2>
+      <ul id="decisions"></ul>
+    </main>
+
+    <script>
+      // ---- Edit ONLY this object at the end of each session. ----
+      // status: 'Not started' | 'Building' | 'Testing' | 'Done'
+      // phase.done = how much of that phase is finished, 0 to 1
+      const DATA = {
+        phases: [
+          { name: 'Phase 0 — Foundation', status: 'Building', done: 0.15 },
+          { name: 'Phase 1 — Khata', status: 'Not started', done: 0 },
+          { name: 'Phase 2 — Stock + the magic wiring', status: 'Not started', done: 0 },
+          { name: 'Phase 3 — Offline-first', status: 'Not started', done: 0 },
+          { name: 'Phase 4 — Wasooli + Staff', status: 'Not started', done: 0 },
+          { name: 'Phase 5 — Mashwara (AI advisor)', status: 'Not started', done: 0 },
+          { name: 'Phase 6 — Order Book + Udhaar Score', status: 'Not started', done: 0 },
+          { name: 'Phase 7 — Bazaar Pulse + polish', status: 'Not started', done: 0 },
+        ],
+        apps: [
+          {
+            name: 'Core platform',
+            what: 'Auth, tenants, event bus, loader',
+            status: 'Building',
+            tests: 3,
+          },
+          { name: 'Khata', what: 'Voice/photo ledger', status: 'Not started', tests: 0 },
+          { name: 'Stock', what: 'Inventory + alerts', status: 'Not started', tests: 0 },
+          { name: 'Wasooli', what: 'Credit recovery', status: 'Not started', tests: 0 },
+          { name: 'Staff', what: 'Attendance + salary', status: 'Not started', tests: 0 },
+          { name: 'Order Book', what: 'Public shop link', status: 'Not started', tests: 0 },
+          { name: 'Udhaar Score', what: 'Business credit score', status: 'Not started', tests: 0 },
+          { name: 'Mashwara', what: 'AI advisor', status: 'Not started', tests: 0 },
+          { name: 'Bazaar Pulse', what: 'Anonymous market stats', status: 'Not started', tests: 0 },
+        ],
+        log: [
+          {
+            date: '2026-11-15',
+            done: 'Phase 0 plan approved. Public GitHub repo created. Monorepo (pnpm + Turborepo), strict TypeScript, ESLint, Prettier, Vitest and CI set up. Mini-app manifest schema written with 3 tests.',
+            next: 'Tenant helper + event bus in packages/core, then API with phone + password auth.',
+            blockers: 'None.',
+          },
+        ],
+        decisions: [
+          {
+            text: 'One monorepo with pnpm workspaces + Turborepo',
+            adr: '../docs/adr/0001-monorepo.md',
+          },
+          { text: 'Login is phone number + password' },
+          {
+            text: 'Event bus runs inside the API and saves every event in MongoDB (no Redis until Phase 4)',
+          },
+          { text: 'Design feel: "Warm bazaar" — paper cream, deep green, saffron' },
+        ],
+      };
+
+      const cls = (s) => 's-' + s.toLowerCase().replace(' ', '-');
+      // textContent everywhere: nothing in DATA is ever treated as HTML.
+      const el = (tag, text, className) => {
+        const e = document.createElement(tag);
+        if (text) e.textContent = text;
+        if (className) e.className = className;
+        return e;
+      };
+      const $ = (id) => document.getElementById(id);
+
+      const pct = Math.round(
+        (DATA.phases.reduce((sum, p) => sum + p.done, 0) / DATA.phases.length) * 100,
+      );
+      $('bar').style.width = pct + '%';
+      $('pct').textContent = pct + '% complete overall';
+
+      for (const p of DATA.phases) {
+        const li = el('li', p.name, cls(p.status));
+        li.append(el('div', p.status + ' · ' + Math.round(p.done * 100) + '%', 'small'));
+        $('phases').append(li);
+      }
+      for (const a of DATA.apps) {
+        const card = el('div', '', 'card');
+        card.append(el('b', a.name), el('span', a.what, 'small'), el('br'));
+        card.append(el('span', a.status, 'pill ' + cls(a.status)));
+        card.append(el('div', a.tests + ' tests passing', 'small'));
+        $('apps').append(card);
+      }
+      for (const s of DATA.log) {
+        const d = el('div', '', 'log');
+        d.append(el('b', s.date), el('p', 'Done: ' + s.done), el('p', 'Next: ' + s.next));
+        d.append(el('p', 'Blockers: ' + s.blockers, s.blockers === 'None.' ? 'small' : 'blocker'));
+        $('log').append(d);
+      }
+      for (const d of DATA.decisions) {
+        const li = el('li', d.text + ' ');
+        if (d.adr) {
+          const a = el('a', '(ADR)');
+          a.href = d.adr;
+          li.append(a);
+        }
+        $('decisions').append(li);
+      }
+    </script>
+  </body>
+</html>
