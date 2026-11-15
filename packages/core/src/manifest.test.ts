@@ -3,7 +3,7 @@ import { manifestSchema } from './manifest';
 
 const valid = {
   id: 'hello',
-  name: 'Hello',
+  name: { en: 'Hello', ur: 'سلام' },
   icon: 'hand',
   routes: [{ path: '/' }],
   permissions: [],
