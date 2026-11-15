@@ -1,0 +1,46 @@
+/*
+ * "Warm bazaar" design tokens. Components use these names, never raw hex colours.
+ * Import this after `@import "tailwindcss";` in the app's CSS.
+ */
+@theme {
+  --color-bg: #f7f1e3; /* paper cream, like a khata page */
+  --color-surface: #fffaf0;
+  --color-fg: #2a2118; /* ink */
+  --color-muted: #6a5d4e; /* 5.6:1 on bg */
+  --color-border: #dccfb4;
+  --color-primary: #1f5c44; /* deep green */
+  --color-primary-strong: #17473a;
+  --color-on-primary: #ffffff;
+  --color-accent: #e09a2b; /* saffron: use with ink text, never white */
+  --color-on-accent: #2a2118;
+  --color-danger: #a3301f;
+
+  /* System fonts: zero download on cheap phones. Android ships Noto for Urdu. */
+  --font-sans:
+    system-ui, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Naskh Arabic', 'Noto Nastaliq Urdu',
+    sans-serif;
+  --font-display: Georgia, 'Noto Serif', 'Noto Naskh Arabic', serif;
+}
+
+@layer base {
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+  /* Urdu script is taller: give it more room so lines do not collide. */
+  :lang(ur) {
+    line-height: 1.9;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
