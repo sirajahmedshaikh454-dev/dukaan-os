@@ -14,6 +14,6 @@ Mini-apps never import each other. They talk only through events on the shared b
 
 ## Event list
 
-| Event                                                       | Published by | Consumed by | Payload |
-| ----------------------------------------------------------- | ------------ | ----------- | ------- |
-| _none yet — the first ones arrive with the dummy mini-apps_ |              |             |         |
+| Event             | Published by | Consumed by | Payload                            |
+| ----------------- | ------------ | ----------- | ---------------------------------- |
+| `hello.pinged.v1` | hello        | counter     | `{ note: string }` (max 100 chars) |
