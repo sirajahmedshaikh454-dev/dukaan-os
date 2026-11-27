@@ -29,7 +29,7 @@ front, in plan mode for anything bigger than a demo:
 3. **Icon**: a lucide icon name in kebab-case (e.g. `book-open`, `package`). Check that it exists:
    from `apps/web`, run
    `node -e "import('lucide-react/dynamic').then(m => console.log(m.iconNames.includes('<name>')))"`.
-   A wrong name fails the type check in `HomePage` and shows an empty tile.
+   A wrong name passes the type check (the manifest stores a plain string) and shows an empty tile.
 4. **Events**: which events it publishes and which it consumes. Every one must already exist in
    `contracts.ts`, or you add it there (see below).
 5. **Does it need a server?** `server.ts` is optional. A screen-only app just has no `server.ts`.
@@ -38,7 +38,7 @@ front, in plan mode for anything bigger than a demo:
 
 ```
 miniapps/<id>/
-  package.json     copy from counter; change "name" to @dukaan/miniapp-<id>; keep only the deps you use
+  package.json     copy from counter; change "name" to @dukaan/miniapp-<id>
   tsconfig.json    copy from counter unchanged
   src/manifest.ts  export const manifest: Manifest = { id, name: {en, ur}, icon, routes, permissions,
                    eventsPublished, eventsConsumed }
@@ -46,7 +46,8 @@ miniapps/<id>/
   src/web.tsx      export default function <Name>Screen({ api, lang }: MiniappScreenProps)
 ```
 
-Then run `pnpm install` so the workspace links the new package.
+**Then run `pnpm install`** so the workspace links the new package. Typecheck and the API loader
+fail with "cannot find module" until you do.
 
 ### server.ts rules (these protect shop data)
 
@@ -54,6 +55,11 @@ Then run `pnpm install` so the workspace links the new package.
   was verified; the body is whatever the client sent.
 - **Store data only with `tenantModel` from `@dukaan/core/server`**, then `.for(tenantId)`. ESLint
   blocks importing `mongoose` here on purpose (ADR-0002).
+- **Need sorting or a limit (newest first, latest 50)?** `tenantModel().for()` has no sort or limit
+  yet, and `TenantDoc` does not type `createdAt`/`updatedAt` even though the schema stores them. Add
+  what you need to `packages/core/src/tenant.ts` (a `sort`/`limit` option on `find`, the timestamp
+  fields on `TenantDoc`) plus a test in `tenant.test.ts`. Do not sort in memory: it loads every
+  document of the shop, and lists like Khata grow without end.
 - **Prefix model names with the mini-app id** (e.g. `KhataEntry`, not `Entry`). Mongoose model names
   are global, so a clash throws at startup.
 - **Validate every request body with Zod** (`schema.parse(req.body ?? {})`). The central error
@@ -63,6 +69,9 @@ Then run `pnpm install` so the workspace links the new package.
   Update the manifest first.
 - Give each subscribe a short handler id (`'onSale'`). The bus prefixes it with the app id, so
   failures logged on the event say which app broke.
+- **Save first, then publish.** Write your own document, then `bus.publish`. If publishing fails, the
+  request fails and the user can retry. The reverse order can announce something that was never saved.
+  A crash between the two still loses the event; the Phase 3/4 outbox closes that gap.
 - **Make handlers safe to run twice.** Use atomic updates (`$inc`, upserts) or check whether the work
   is already done. Delivery moves to BullMQ with retries in Phase 4, and retries repeat handlers.
 - Never import another mini-app. Talk through events in `contracts.ts` only (ESLint enforces this).
@@ -76,13 +85,16 @@ Then run `pnpm install` so the workspace links the new package.
 - Put every string in a `text = { en: {...}, ur: {...} }` object and pick `text[lang]`, like Hello
   and Counter do. Mini-apps do not touch the shell's i18n files.
 - Build from `@dukaan/ui`: `Button`, `Card`, `Input`, `LoadingState`, `EmptyState`, `ErrorState`.
-  Loading, empty and error states are designed screens, not leftovers.
+  Loading, empty and error states are designed screens, not leftovers. If you need a component it lacks
+  (a textarea, a list row), add it to `packages/ui` in the same style as `Input`, so the next app reuses it.
 - Use token classes (`bg-primary`, `text-muted`, `text-danger`), never raw hex colours. Keep touch
   targets 48px or more (`min-h-12`). Use logical/RTL-safe layout, because Urdu flips the page.
 - For server data use TanStack Query (`useQuery`) like Counter, and add
   `@tanstack/react-query` to the package's dependencies.
 - Add a `data-testid` only where an E2E test needs a stable hook.
-- For a new screen or restyle, follow the design skill (`ui-ux-pro-max`) as CLAUDE.md asks.
+- If the screen needs a new visual pattern (a chart, a new layout, a new component), follow the
+  design skill (`ui-ux-pro-max`) as CLAUDE.md asks; for charts, the `dataviz` skill. A screen built only
+  from existing `@dukaan/ui` parts does not need it.
 
 ## New events
 
@@ -92,14 +104,17 @@ For each new event:
    `export const thingHappened = defineEvent('thing.happened.v1', z.object({...}))`.
    The name must be versioned (`.v1`). A breaking payload change means a new `.v2`, never an edit.
    Money fields are `z.number().int()` paisa.
-2. Add a row to the table in `docs/EVENTS.md`: event, published by, consumed by, payload.
+2. Add a row to the table in `docs/EVENTS.md`: event, published by, consumed by, payload. If nothing
+   consumes it yet, write `(none yet)`.
 3. List it in the manifest's `eventsPublished` / `eventsConsumed`.
 
 ## Tests
 
 Add `apps/api/src/<id>.test.ts`, copying the setup from `miniapps.test.ts` (`await createApp(...)`,
-`startTestDb`, a `newShop` helper that signs up and returns the bearer token and tenantId). CLAUDE.md
-section 7 asks for these cases on every route:
+`startTestDb`, a `newShop` helper that signs up and returns the bearer token and tenantId). Each test
+file starts its own throw-away database, so files never see each other's data. Inside one file, give
+every shop its own phone number, because signup refuses a number that is taken. CLAUDE.md section 7
+asks for these cases on every route:
 
 - **Happy path**: the route does its job, and any event lands in `listEvents(tenantId, name)`.
 - **Auth failure**: no token gives 401.
@@ -107,7 +122,8 @@ section 7 asks for these cases on every route:
 - **Wrong tenant**: shop B cannot see or change shop A's data. Assert the 404, or that B gets its own
   empty result.
 - **Cross-app effect**: if the app consumes an event, publish it through the real route of the app
-  that owns it and assert the effect, like the Hello → Counter test.
+  that owns it and assert the effect, like the Hello → Counter test. An app that only publishes proves
+  its event with `listEvents` in the happy path instead.
 
 Pure logic (calculations, parsers, state machines) gets plain Vitest unit tests next to the code, and
 property tests (fast-check) for anything touching money.
@@ -117,11 +133,16 @@ property tests (fast-check) for anything touching money.
 Run these and read the output. Do not report done on "it should work" (CLAUDE.md rule 3):
 
 ```bash
+pnpm format      # Prettier rewrites new files; otherwise `pnpm lint` fails on formatting alone
 pnpm lint
 pnpm -r typecheck   # `pnpm typecheck` uses turbo, which Windows Application Control blocks on this PC
 pnpm -r test
-pnpm e2e            # the smoke test must still pass now that the home grid has one more tile
+pnpm e2e            # the smoke test must still pass with the new app on the home screen
 ```
+
+`pnpm e2e` needs MongoDB on 127.0.0.1:27017. If the dev servers already hold ports 4000 and 5173,
+Playwright reuses them, so the test runs against your dev database. That is fine, because each run
+signs up a brand-new shop.
 
 Then open the app in the browser pane at 360px, in English and Urdu, and check: the tile shows with
 its icon, the screen opens, the loading and error states look designed, and nothing scrolls sideways.
