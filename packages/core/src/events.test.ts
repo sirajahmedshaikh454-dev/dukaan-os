@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { createBus, defineEvent, listEvents } from './events';
+import { defineEvent } from './contracts';
+import { createBus, listEvents } from './events';
 import { newId, startTestDb } from './testing';
 
 const pinged = defineEvent('test.pinged.v1', z.object({ note: z.string() }));

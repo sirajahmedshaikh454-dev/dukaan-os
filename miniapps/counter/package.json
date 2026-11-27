@@ -1,0 +1,21 @@
+{
+  "name": "@dukaan/miniapp-counter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dukaan/core": "workspace:*",
+    "@dukaan/ui": "workspace:*",
+    "@tanstack/react-query": "^5.107.1",
+    "react": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/react": "^19.3.0",
+    "express": "^5.3.0"
+  }
+}

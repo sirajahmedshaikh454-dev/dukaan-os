@@ -12,6 +12,7 @@ const env = z
   .parse(process.env);
 
 await connectDb(env.MONGODB_URI);
-createApp({ jwtSecret: env.JWT_SECRET }).listen(env.PORT, () => {
+const app = await createApp({ jwtSecret: env.JWT_SECRET });
+app.listen(env.PORT, () => {
   console.log(`API ready on http://localhost:${env.PORT}`);
 });

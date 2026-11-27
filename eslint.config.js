@@ -15,7 +15,13 @@ export default tseslint.config(
     rules: {
       'no-restricted-imports': [
         'error',
-        { paths: [{ name: 'mongoose', message: 'Use tenantModel from @dukaan/core.' }] },
+        {
+          paths: [{ name: 'mongoose', message: 'Use tenantModel from @dukaan/core.' }],
+          // Mini-apps talk through events and contracts, never by importing each other.
+          patterns: [
+            { group: ['@dukaan/miniapp-*', '**/miniapps/*'], message: 'Use the event bus.' },
+          ],
+        },
       ],
     },
   },

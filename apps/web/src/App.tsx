@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Component, Suspense, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, Outlet, Route, Routes, useParams } from 'react-router';
-import { useAuth } from './api';
+import { api, useAuth } from './api';
 import { currentLang } from './i18n';
 import { miniapps } from './miniapps';
 import { AuthPage } from './pages/AuthPage';
@@ -82,7 +82,10 @@ function MiniAppPage() {
         }
       >
         <Suspense fallback={<LoadingState label={t('loading')} />}>
-          <app.Screen />
+          <app.Screen
+            api={(path, options) => api(`/apps/${app.manifest.id}${path}`, options)}
+            lang={currentLang()}
+          />
         </Suspense>
       </AppBoundary>
     </>

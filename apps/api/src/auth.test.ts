@@ -3,7 +3,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from './app';
 
-const app = createApp({ jwtSecret: 'test-secret-that-is-at-least-32-chars' });
+const app = await createApp({ jwtSecret: 'test-secret-that-is-at-least-32-chars' });
 const ali = { phone: '0300 1234567', password: 'ali-ka-password', shopName: 'Ali Kiryana' };
 const sara = { phone: '03111234567', password: 'sara-ka-password', shopName: 'Sara Tailors' };
 
@@ -95,7 +95,7 @@ describe('GET /api/auth/me', () => {
   });
 
   it('rejects a token signed with a different secret', async () => {
-    const other = createApp({ jwtSecret: 'another-secret-that-is-32-chars-long' });
+    const other = await createApp({ jwtSecret: 'another-secret-that-is-32-chars-long' });
     const login = await request(other)
       .post('/api/auth/login')
       .send({ phone: ali.phone, password: ali.password });

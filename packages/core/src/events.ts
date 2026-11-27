@@ -1,6 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import type { z } from 'zod';
-import { eventNameSchema } from './manifest';
+import type { EventDef } from './contracts';
 
 // The event log. Name, tenant and payload are written once and never changed.
 const EventModel = mongoose.model(
@@ -15,16 +14,6 @@ const EventModel = mongoose.model(
     { timestamps: { createdAt: true, updatedAt: false } },
   ),
 );
-
-export interface EventDef<P> {
-  name: string;
-  schema: z.ZodType<P>;
-}
-
-export function defineEvent<P>(name: string, schema: z.ZodType<P>): EventDef<P> {
-  eventNameSchema.parse(name);
-  return { name, schema };
-}
 
 export interface BusEvent<P> {
   eventId: string;
