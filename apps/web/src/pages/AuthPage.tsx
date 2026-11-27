@@ -23,6 +23,7 @@ export function AuthPage({ kind }: { kind: 'login' | 'signup' }) {
   const { t } = useTranslation();
   const isSignup = kind === 'signup';
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -55,7 +56,13 @@ export function AuthPage({ kind }: { kind: 'login' | 'signup' }) {
 
       <Card>
         <h1 className="mb-4 font-display text-xl font-bold">{t(kind)}</h1>
-        <form onSubmit={(e) => void onSubmit(e)} noValidate className="flex flex-col gap-4">
+        <form
+          onSubmit={(e) => void onSubmit(e)}
+          // An old "wrong password" message is confusing once the user starts fixing the form.
+          onChange={() => setServerError(null)}
+          noValidate
+          className="flex flex-col gap-4"
+        >
           {isSignup && (
             <Input
               label={t('shopName')}
@@ -77,7 +84,7 @@ export function AuthPage({ kind }: { kind: 'login' | 'signup' }) {
           <Input
             label={t('password')}
             hint={isSignup ? t('passwordHint') : undefined}
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             dir="ltr"
             autoComplete={isSignup ? 'new-password' : 'current-password'}
             error={
@@ -86,6 +93,16 @@ export function AuthPage({ kind }: { kind: 'login' | 'signup' }) {
             }
             {...register('password')}
           />
+          {/* Small phone keyboards cause typos; let people check what they typed. */}
+          <label className="-mt-2 flex min-h-12 cursor-pointer items-center gap-3 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={showPassword}
+              onChange={(e) => setShowPassword(e.target.checked)}
+              className="size-5 accent-primary"
+            />
+            {t('showPassword')}
+          </label>
           {serverError && (
             <p role="alert" className="rounded-xl bg-danger/10 p-3 text-sm font-medium text-danger">
               {serverError}

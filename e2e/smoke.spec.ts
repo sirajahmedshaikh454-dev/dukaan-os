@@ -8,7 +8,7 @@ test('new shopkeeper signs up, pings from Hello, and Counter shows 1', async ({ 
 
   await page.getByLabel('Shop name').fill('Smoke Test Kiryana');
   await page.getByLabel('Mobile number').fill(newPhone());
-  await page.getByLabel('Password').fill('smoke-test-password');
+  await page.getByLabel('Password', { exact: true }).fill('smoke-test-password');
   await page.getByRole('button', { name: 'Create account' }).click();
 
   // Home: one tile per mini-app manifest, and the shop name in the header.
