@@ -19,6 +19,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      # Download the test MongoDB once. Otherwise test files running in parallel
+      # all try to download it and collide on its lock file.
+      - run: pnpm --filter @dukaan/core exec node -e "import('mongodb-memory-server').then((m) => m.MongoBinary.getPath())"
       - run: pnpm test
 
   # CLAUDE.md section 7: E2E runs on main (and by hand), not on every PR.
