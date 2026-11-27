@@ -36,7 +36,10 @@ export function Layout() {
           <LanguageButton />
           <button
             type="button"
-            onClick={() => void logout()}
+            // One tap in the corner should not log a busy shopkeeper out by accident.
+            onClick={() => {
+              if (confirm(t('logoutConfirm'))) void logout();
+            }}
             aria-label={t('logout')}
             title={t('logout')}
             className="flex size-12 cursor-pointer items-center justify-center rounded-xl hover:bg-surface"

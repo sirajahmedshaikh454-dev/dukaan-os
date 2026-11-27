@@ -173,7 +173,7 @@
       // phase.done = how much of that phase is finished, 0 to 1
       const DATA = {
         phases: [
-          { name: 'Phase 0 — Foundation', status: 'Building', done: 0.25 },
+          { name: 'Phase 0 — Foundation', status: 'Done', done: 1 },
           { name: 'Phase 1 — Khata', status: 'Not started', done: 0 },
           { name: 'Phase 2 — Stock + the magic wiring', status: 'Not started', done: 0 },
           { name: 'Phase 3 — Offline-first', status: 'Not started', done: 0 },
@@ -186,8 +186,8 @@
           {
             name: 'Core platform',
             what: 'Auth, tenants, event bus, loader',
-            status: 'Building',
-            tests: 11,
+            status: 'Done',
+            tests: 44,
           },
           { name: 'Khata', what: 'Voice/photo ledger', status: 'Not started', tests: 0 },
           { name: 'Stock', what: 'Inventory + alerts', status: 'Not started', tests: 0 },
@@ -199,6 +199,13 @@
           { name: 'Bazaar Pulse', what: 'Anonymous market stats', status: 'Not started', tests: 0 },
         ],
         log: [
+          {
+            date: '2026-11-27',
+            done: 'Phase 0 finished. Phone + password login (JWT + rotating refresh cookie), Warm bazaar design system, web shell with English/Urdu (RTL), mini-app loader from manifests, Hello + Counter demo apps talking only through the event bus, Playwright smoke test on desktop and 360px. 42 unit/integration tests + 2 E2E runs pass; CI green on main including E2E. Real-user pass done; top 3 UX problems fixed (see docs/UX_NOTES.md). Tagged v0.1.0-core.',
+            next: 'Phase 1 — Khata: plan the double-entry ledger (integer paisa, append-only, property tests).',
+            blockers:
+              'Windows Application Control blocks turbo.exe on this PC, so run pnpm -r typecheck / pnpm -r test locally. CI is not affected.',
+          },
           {
             date: '2026-11-15',
             done: 'Phase 0 plan approved. Public GitHub repo created. Monorepo (pnpm + Turborepo), strict TypeScript, ESLint, Prettier, Vitest and CI set up. Tenant-scoped models and the event bus built in packages/core. 11 tests pass. PR 2 (tooling) is green; PR 4 (core) is open.',
@@ -215,9 +222,10 @@
             text: 'Tenant data only through tenantModel().for(tenantId)',
             adr: '../docs/adr/0002-tenancy.md',
           },
-          { text: 'Login is phone number + password' },
+          { text: 'Login is phone number + password', adr: '../docs/adr/0004-auth-tokens.md' },
           {
             text: 'Event bus runs inside the API and saves every event in MongoDB (no Redis until Phase 4)',
+            adr: '../docs/adr/0003-event-bus.md',
           },
           { text: 'Design feel: "Warm bazaar" — paper cream, deep green, saffron' },
         ],
